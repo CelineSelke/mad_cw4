@@ -65,6 +65,7 @@ class Plan{
         else{
           completion = 0;
         }
+        setColor();
     }
 
     void setColor(){
@@ -83,6 +84,7 @@ class Plan{
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Plan> plans = [];
+  List<String> months = ["Jan.", "Feb.", "Mar.", "Apr.", "May.", "Jun.", "Jul.", "Aug.", "Sep.", "Oct.", "Nov.", "Dec."];
 
   void deletePlan(int index) {
     setState(() {
@@ -113,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             TextButton(
-              child: const Text("Add"),
+              child: const Text("Next"),
               onPressed: () {
                 if (newPlanName.isNotEmpty) {
                   Navigator.of(context).pop();
@@ -151,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             TextButton(
-              child: const Text("Add"),
+              child: const Text("Next"),
               onPressed: () {
                 if (newDescription.isNotEmpty) {
                   Navigator.of(context).pop();
@@ -191,13 +193,17 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
               child: const Text("Add"),
               onPressed: () {
-                List<String> dateSplit = date.split("-");
-                String dateParsed = dateSplit[1] + "/" + dateSplit[2] + "/" + dateSplit[0];
-                setState(() {
-                  plans.add(Plan(name, description, dateParsed));
+                final dateRegex = RegExp(r"^\d{4}-\d{2}-\d{2}$");
+                if(dateRegex.hasMatch(date) && (int.parse(date.substring(5,7)) < 13) && (int.parse(date.substring(5,7)) > 0) && (int.parse(date.substring(8,10)) < 31) && (int.parse(date.substring(8,10)) > 0 )){
+                  List<String> dateSplit = date.split("-");
+                  String month = months[int.parse(dateSplit[1])];
+                  String dateParsed = month + " " + dateSplit[2] + ", " + dateSplit[0];
+                  setState(() {
+                    plans.add(Plan(name, description, dateParsed));
 
-                });
-                Navigator.of(context).pop();
+                  });
+                  Navigator.of(context).pop();
+                }
               },
             ),
           ],
@@ -256,50 +262,56 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            plans.length,
-            (index) => SizedBox(
-              key: Key(index.toString()),
-              width: 600,
-              height: 300,
-              child: Padding(padding: EdgeInsets.all(15),
-                child:GestureDetector(
-                  onLongPress: (){setState(() {
-                    editPlan(index);
-                  });},
-                  onDoubleTap: (){setState(() {
-                    deletePlan(index);
-                  });},
-                  onVerticalDragUpdate: (DragUpdateDetails details){setState(() {
-                    setCompletion(index);
-                  });},
-                  child: ColoredBox(color: plans[index].getColor(), child: Column(mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(plans[index].getName(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25)),
-                    Text(plans[index].getDescription(), style: TextStyle(fontSize: 15)),
-                    Text(plans[index].getDate(), style: TextStyle(fontSize: 15)),
-                    
-                  ],
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text(widget.title),
+        ),
+        body: ListView.builder(
+          itemCount: plans.length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onLongPress: () {
+                setState(() {
+                  editPlan(index);
+                });
+              },
+              onDoubleTap: () {
+                setState(() {
+                  deletePlan(index);  
+                });
+              },
+              onHorizontalDragUpdate: (DragUpdateDetails details) {
+                setState(() {
+                  setCompletion(index); 
+                });
+              },
+              child: SizedBox(
+                width: 600,
+                height: 200,
+                child: Padding(
+                  padding: EdgeInsets.all(15),
+                  child: ColoredBox(
+                    color: plans[index].getColor(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(plans[index].getName(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25)),
+                        Text(plans[index].getDescription(), style: TextStyle(fontSize: 15)),
+                        Text(plans[index].getDate(), style: TextStyle(fontSize: 15)),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-    
-            ))
-            ),
-          ),
+            );
+          },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: showNamePlanDialog,
-        child: const Text("Create\nPlan"),
-      ),
-    );
-  }
+        floatingActionButton: FloatingActionButton(
+          onPressed: showNamePlanDialog,
+          child: const Text("Create\nPlan"),
+        ),
+      );
+    }
+
 }

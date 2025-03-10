@@ -77,8 +77,16 @@ class Plan{
         }
     }
 
-    void setDescription(String desc){
-        description = desc;
+    void setDescription(String newDesc){
+        description = newDesc;
+    }
+
+    void setName(String newName){
+       name = newName;
+    }
+
+    void setDate(String newDate){
+      date = newDate;
     }
 }
 
@@ -212,9 +220,91 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void editPlanName(int index){
+      String newPlanName = "";
+      showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter New Plan Name'),
+          content: TextField(
+            onChanged: (value) {
+              setState(() {
+                newPlanName = value;
+              });
+            },
+            decoration: const InputDecoration(hintText: "Enter New Plan Name"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("Next"),
+              onPressed: () {
+                if (newPlanName.isNotEmpty) {
+                  setState(() {
+                    plans[index].setName(newPlanName);
+                  });
+                }
+                Navigator.of(context).pop();
+                editPlanDescription(index);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
+    void editPlanDate(int index){
+      String newPlanDate = "";
+      showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter New Plan Date'),
+          content: TextField(
+            onChanged: (value) {
+              setState(() {
+                newPlanDate = value;
+              });
+            },
+            decoration: const InputDecoration(hintText: "Enter New Plan Date (yyyy-mm-dd)"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("Finish"),
+              onPressed: () {
+                final dateRegex = RegExp(r"^\d{4}-\d{2}-\d{2}$");
+                if(dateRegex.hasMatch(newPlanDate) && (int.parse(newPlanDate.substring(5,7)) < 13) && (int.parse(newPlanDate.substring(5,7)) > 0) && (int.parse(newPlanDate.substring(8,10)) < 31) && (int.parse(newPlanDate.substring(8,10)) > 0 )){
+                  List<String> dateSplit = newPlanDate.split("-");
+                  String month = months[int.parse(dateSplit[1])];
+                  String dateParsed = month + " " + dateSplit[2] + ", " + dateSplit[0];
+                  setState(() {
+                      plans[index].setDate(dateParsed);
+                  });
+                  Navigator.of(context).pop();
 
-  void editPlan(int index){
+                }
+              }
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void editPlanDescription(int index){
       String newPlanDescription = "";
       showDialog(
       context: context,
@@ -237,7 +327,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             TextButton(
-              child: const Text("Add"),
+              child: const Text("Next"),
               onPressed: () {
                 if (newPlanDescription.isNotEmpty) {
                   setState(() {
@@ -245,6 +335,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   });
                 }
                 Navigator.of(context).pop();
+                editPlanDate(index);
               },
             ),
           ],
@@ -273,7 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
             return GestureDetector(
               onLongPress: () {
                 setState(() {
-                  editPlan(index);
+                  editPlanName(index);
                 });
               },
               onDoubleTap: () {

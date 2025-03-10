@@ -29,33 +29,64 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class Plan{
+    String name = "";
+    String description = "";
+    String date = "";
+    Color color = Colors.red;
+    int completion = 0;
+
+    Plan(String newName, String newDescription, String newDate){
+        name = newName;
+        description = newDescription;
+        date = newDate;
+    }
+
+    String getName(){
+      return name;
+    }
+
+    String getDescription(){
+      return description;
+    }
+
+    String getDate(){
+      return date;
+    }
+
+    Color getColor(){
+      return color;
+    }
+
+    void setCompletion(){
+        if(completion == 0){
+          completion = 1;
+        }
+        else{
+          completion = 0;
+        }
+    }
+
+    void setColor(){
+        if(completion == 0){
+          color = Colors.red;
+        }
+        else{
+          color = Colors.green;
+        }
+    }
+
+    void setDescription(String desc){
+        description = desc;
+    }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
-  List<String> plans = [];
-  List<String> planDescriptions = [];
-  List<String> planDates = [];
-  List<int> planCompletion = [];
-  List<Color> colors = [];
-  int planIDCounter = 0;
-
-  void createPlan(String planName, String planDescription, String date) {
-    setState(() {
-      plans.add(planName);
-      planDescriptions.add(planDescription);
-      planDates.add(date);
-      planCompletion.add(0);
-      colors.add(Colors.red);
-
-      planIDCounter++;
-      if(plans.length > 7){
-        deletePlan(0);
-      }
-    });
-  }
+  List<Plan> plans = [];
 
   void deletePlan(int index) {
     setState(() {
       plans.removeAt(index);
-      planCompletion.removeAt(index);
     });
   }
 
@@ -103,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Enter Plan Name'),
+          title: const Text('Enter Plan Description'),
           content: TextField(
             onChanged: (value) {
               setState(() {
@@ -141,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Enter Plan Name'),
+          title: const Text('Enter Plan Date'),
           content: TextField(
             onChanged: (value) {
               setState(() {
@@ -162,8 +193,10 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 List<String> dateSplit = date.split("-");
                 String dateParsed = dateSplit[1] + "/" + dateSplit[2] + "/" + dateSplit[0];
-                
-                createPlan(name, description, dateParsed);
+                setState(() {
+                  plans.add(Plan(name, description, dateParsed));
+
+                });
                 Navigator.of(context).pop();
               },
             ),
@@ -173,13 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void setColor(int index){
-      if(planCompletion[index] == 0){
-        colors[index] = Colors.red;
-      }
-      
-      colors[index] = Colors.green;
-  }
+
 
   void editPlan(int index){
       String newPlanDescription = "";
@@ -187,14 +214,14 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Enter Plan Name'),
+          title: const Text('Enter New Plan Description'),
           content: TextField(
             onChanged: (value) {
               setState(() {
                 newPlanDescription = value;
               });
             },
-            decoration: const InputDecoration(hintText: "Enter Plan Name"),
+            decoration: const InputDecoration(hintText: "Enter New Plan Description"),
           ),
           actions: <Widget>[
             TextButton(
@@ -208,7 +235,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 if (newPlanDescription.isNotEmpty) {
                   setState(() {
-                    planDescriptions[index] = newPlanDescription;
+                    plans[index].setDescription(newPlanDescription);
                   });
                 }
                 Navigator.of(context).pop();
@@ -222,13 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void setCompletion(int index){
       setState(() {
-        if(planCompletion[index] == 1){
-          planCompletion[index] = 0;
-        }
-        else{
-          planCompletion[index] = 1;
-        }
-        setColor(index);
+        plans[index].setCompletion();
 
       });
   }
@@ -251,14 +272,20 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 300,
               child: Padding(padding: EdgeInsets.all(15),
                 child:GestureDetector(
-                  onLongPress: (){editPlan(index);},
-                  onDoubleTap: (){deletePlan(index);},
-                  onVerticalDragUpdate: (DragUpdateDetails details){setCompletion(index);},
-                  child: ColoredBox(color: colors[index], child: Column(mainAxisAlignment: MainAxisAlignment.center,
+                  onLongPress: (){setState(() {
+                    editPlan(index);
+                  });},
+                  onDoubleTap: (){setState(() {
+                    deletePlan(index);
+                  });},
+                  onVerticalDragUpdate: (DragUpdateDetails details){setState(() {
+                    setCompletion(index);
+                  });},
+                  child: ColoredBox(color: plans[index].getColor(), child: Column(mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(plans[index], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25)),
-                    Text(planDescriptions[index], style: TextStyle(fontSize: 15)),
-                    Text(planDates[index], style: TextStyle(fontSize: 15)),
+                    Text(plans[index].getName(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25)),
+                    Text(plans[index].getDescription(), style: TextStyle(fontSize: 15)),
+                    Text(plans[index].getDate(), style: TextStyle(fontSize: 15)),
                     
                   ],
                 ),

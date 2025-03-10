@@ -30,17 +30,23 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<String> Plans = [];
-  List<int> plancompletion = [];
-  int PlanIDCounter = 0;
+  List<String> plans = [];
+  List<String> planDescriptions = [];
+  List<String> planDates = [];
+  List<int> planCompletion = [];
+  List<Color> colors = [];
+  int planIDCounter = 0;
 
-  void createPlan(String PlanName) {
+  void createPlan(String planName, String planDescription, String date) {
     setState(() {
-      Plans.add(PlanName);
-      plancompletion.add(0);
+      plans.add(planName);
+      planDescriptions.add(planDescription);
+      planDates.add(date);
+      planCompletion.add(0);
+      colors.add(Colors.red);
 
-      PlanIDCounter++;
-      if(Plans.length > 7){
+      planIDCounter++;
+      if(plans.length > 7){
         deletePlan(0);
       }
     });
@@ -48,12 +54,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void deletePlan(int index) {
     setState(() {
-      Plans.removeAt(index);
-      plancompletion.removeAt(index);
+      plans.removeAt(index);
+      planCompletion.removeAt(index);
     });
   }
 
-  void showcreatePlanDialog() {
+  void showNamePlanDialog() {
     String newPlanName = "";
     showDialog(
       context: context,
@@ -79,8 +85,85 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text("Add"),
               onPressed: () {
                 if (newPlanName.isNotEmpty) {
-                  createPlan(newPlanName);
+                  Navigator.of(context).pop();
+
+                  showPlanDescriptionDialog(newPlanName);
                 }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showPlanDescriptionDialog(String name){
+    String newDescription = "";
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter Plan Name'),
+          content: TextField(
+            onChanged: (value) {
+              setState(() {
+                newDescription = value;
+              });
+            },
+            decoration: const InputDecoration(hintText: "Enter Plan Description"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("Add"),
+              onPressed: () {
+                if (newDescription.isNotEmpty) {
+                  Navigator.of(context).pop();
+
+                  showPlanDateDialog(name, newDescription);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showPlanDateDialog(String name, String description){
+    String date = "";
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter Plan Name'),
+          content: TextField(
+            onChanged: (value) {
+              setState(() {
+                date = value;
+              });
+            },
+            decoration: const InputDecoration(hintText: "Enter Plan Date (yyyy-mm-dd)"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("Add"),
+              onPressed: () {
+                List<String> dateSplit = date.split("-");
+                String dateParsed = dateSplit[1] + "/" + dateSplit[2] + "/" + dateSplit[0];
+                
+                createPlan(name, description, dateParsed);
                 Navigator.of(context).pop();
               },
             ),
@@ -90,20 +173,16 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Color getColor(int index){
-      if(plancompletion[index] == 0){
-        return Colors.red;
-      }
-
-      if(plancompletion[index] == 1){
-        return Colors.yellow;
+  void setColor(int index){
+      if(planCompletion[index] == 0){
+        colors[index] = Colors.red;
       }
       
-      return Colors.green;
+      colors[index] = Colors.green;
   }
 
   void editPlan(int index){
-      String newPlanName = "";
+      String newPlanDescription = "";
       showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -112,7 +191,7 @@ class _MyHomePageState extends State<MyHomePage> {
           content: TextField(
             onChanged: (value) {
               setState(() {
-                newPlanName = value;
+                newPlanDescription = value;
               });
             },
             decoration: const InputDecoration(hintText: "Enter Plan Name"),
@@ -127,9 +206,9 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
               child: const Text("Add"),
               onPressed: () {
-                if (newPlanName.isNotEmpty) {
+                if (newPlanDescription.isNotEmpty) {
                   setState(() {
-                    Plans[index] = newPlanName;
+                    planDescriptions[index] = newPlanDescription;
                   });
                 }
                 Navigator.of(context).pop();
@@ -139,6 +218,19 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
     );
+  }
+
+  void setCompletion(int index){
+      setState(() {
+        if(planCompletion[index] == 1){
+          planCompletion[index] = 0;
+        }
+        else{
+          planCompletion[index] = 1;
+        }
+        setColor(index);
+
+      });
   }
 
   @override
@@ -152,24 +244,22 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
-            Plans.length,
+            plans.length,
             (index) => SizedBox(
               key: Key(index.toString()),
               width: 600,
-              height: 100,
+              height: 300,
               child: Padding(padding: EdgeInsets.all(15),
                 child:GestureDetector(
                   onLongPress: (){editPlan(index);},
-                  child: ColoredBox(color: getColor(index), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  onDoubleTap: (){deletePlan(index);},
+                  onVerticalDragUpdate: (DragUpdateDetails details){setCompletion(index);},
+                  child: ColoredBox(color: colors[index], child: Column(mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(Plans[index], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
-                    SizedBox(width: 50, height: 50, child: IconButton(
-                      padding: EdgeInsets.all(0),
-                      color: Colors.white,
-                      onPressed: () => deletePlan(index),
-                      icon: Icon(Icons.restore_from_trash),
-                      
-                    ),)
+                    Text(plans[index], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25)),
+                    Text(planDescriptions[index], style: TextStyle(fontSize: 15)),
+                    Text(planDates[index], style: TextStyle(fontSize: 15)),
+                    
                   ],
                 ),
               ),
@@ -180,7 +270,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: showcreatePlanDialog,
+        onPressed: showNamePlanDialog,
         child: const Text("Create\nPlan"),
       ),
     );
